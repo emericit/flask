@@ -1,0 +1,5 @@
+Flask
+pycryptodome
+vaderSentiment
+flask_pydantic
+pydantic

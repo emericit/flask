@@ -1,0 +1,173 @@
+openapi: 3.0.0
+components:
+  securitySchemes:
+    basicAuth:    # arbitrary name for the security scheme
+      type: http
+      scheme: basic
+info:
+  title: Sentiment API
+  version: v1
+  description: >-
+    API computing the sentiment score of a sentence. Two versions are available
+    (v1 & v2).
+
+    To authenticate, you must provide the following entry in the header of your
+    request: `Authorization: username=<encrypted password in hexadecimal>`.
+    Encryption is to be made with a public RSA key, available at the endpoint
+    `/public_key`
+servers:
+  - url: http://localhost:5000/
+    description: Local server
+paths:
+  /permissions:
+    post:
+      summary: Lists the version permissions for an authenticated user.
+      parameters:
+        - in: header
+          name: Authentication
+          schema:
+            type: string
+            format: hex
+            example: 4a149e8d2c70defdd0eb559ca76a628a0c4d66da6ecdc1ce72041a95673b918537c92ed30542dc8cc0e74ce502b0af9382fa3aad0fe8d5f078ebe234c4bb066943b6fb47e9366bd6dd0bec5d9be312d09f0b5483e9f4027e6b90487c7eb4ceb153f9d54c9d666476b74b9b6a9978536a7c34cca6832e987356c2351fabf095b60dabf505b59a35e822c1b8f4ab569414c162f40e3217694e85b5087a47255169aa322cebf16224e79f683226630b3ccd68c2e609c19f1c6c2755ff5d79eb69ddd536e9162c477e016e57cda8d8ac002e1bc0c266fceb17c17ee9b288c51e5967264f3f1f463ebf88eadbfef6dbbb5abc77acbc8a8e4ef0a5ec7a879bb8c0ea2d
+          required: true
+          description: String `username:password` encoded with the public_key
+      responses: 
+        '200':
+          description: Permissions of the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                    description: The username.
+                  v1:
+                    type: integer
+                    description: Permission for version 1.
+                  v2:
+                    type: integer
+                    description: Permission for version 2.
+  /public_key:
+    get:
+      summary: Returns the public key necessary for encryption
+      responses: 
+        '200':
+          description: Public key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  public_key:
+                    type: string
+                    description: The public key.
+                    example: -----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjBxcOOjnmuxUfhdZ3efS\nhTSNzbLSMR3+rQ1gQtmo4jZlVLigkHzZOwt+bP2AL5paSOeyyC39OXkiuRgYADbL\n52pRNAkE5E0JMcMFNZoloHfSAWn/u2KKTLkyEZ7sAlmdYJ2XsvmeQXZCIkgjz6kA\n141tJI/GVjXR0NLQEca1yiyaR+O9kYl08yQLPvl5nssVXAEUAGYf2vcjbKWvTHTn\nsqk0nQnOZD0KYgY/jHPGE53X5JqE6p/HtA7MpKN5+98li8KGFCDfKPklnIINiiYy\nT35EXKFvb3JSNgeNm9RmSt45YwWPdBhK//LDZ9+7LX2+uSUDnwZ65u0yARAmxuQR\nHQIDAQAB\n-----END PUBLIC KEY-----"
+  /status:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Json with single value 1
+          content:
+            application/json:
+              schema:
+                type: integer
+                example: 1
+  /v1/sentiment:
+    post:
+      summary: Sentiment analysis, version 1. The sentence must be provided in the body of the request.
+      parameters:
+        - in: header
+          name: Authentication
+          schema:
+            type: string
+            format: hex
+            example: 4a149e8d2c70defdd0eb559ca76a628a0c4d66da6ecdc1ce72041a95673b918537c92ed30542dc8cc0e74ce502b0af9382fa3aad0fe8d5f078ebe234c4bb066943b6fb47e9366bd6dd0bec5d9be312d09f0b5483e9f4027e6b90487c7eb4ceb153f9d54c9d666476b74b9b6a9978536a7c34cca6832e987356c2351fabf095b60dabf505b59a35e822c1b8f4ab569414c162f40e3217694e85b5087a47255169aa322cebf16224e79f683226630b3ccd68c2e609c19f1c6c2755ff5d79eb69ddd536e9162c477e016e57cda8d8ac002e1bc0c266fceb17c17ee9b288c51e5967264f3f1f463ebf88eadbfef6dbbb5abc77acbc8a8e4ef0a5ec7a879bb8c0ea2d
+          required: true
+          description: String `username:password` encoded with the public_key
+      responses:
+        '200':
+          description: Sentiment V1
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  score:
+                    type: number
+                    description: The score of the sentence (between -1 and +1).
+                    example: -0.5106
+                  sentence:
+                    type: string
+                    description: Analyzed sentence
+                    example: "i am depressed"
+                  sentiment:
+                    type: string
+                    description: Category of the sentiment
+                    example: "negative"
+                  username:
+                    type: string
+                    description: Username making the request
+                    example: "Steven"
+                  version:
+                    type: string
+                    enum: [v1]
+                    example: "v1"
+      
+  /v2/sentiment:
+    post:
+      summary: Sentiment analysis, version 2. The sentence must be provided in the body of the request.
+      parameters:
+        - in: header
+          name: Authentication
+          schema:
+            type: string
+            format: hex
+            example: 4a149e8d2c70defdd0eb559ca76a628a0c4d66da6ecdc1ce72041a95673b918537c92ed30542dc8cc0e74ce502b0af9382fa3aad0fe8d5f078ebe234c4bb066943b6fb47e9366bd6dd0bec5d9be312d09f0b5483e9f4027e6b90487c7eb4ceb153f9d54c9d666476b74b9b6a9978536a7c34cca6832e987356c2351fabf095b60dabf505b59a35e822c1b8f4ab569414c162f40e3217694e85b5087a47255169aa322cebf16224e79f683226630b3ccd68c2e609c19f1c6c2755ff5d79eb69ddd536e9162c477e016e57cda8d8ac002e1bc0c266fceb17c17ee9b288c51e5967264f3f1f463ebf88eadbfef6dbbb5abc77acbc8a8e4ef0a5ec7a879bb8c0ea2d
+          required: true
+          description: String `username:password` encoded with the public_key
+      responses:
+        '200':
+          description: Sentiment V2
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  score:
+                    type: number
+                    description: The score of the sentence (between -1 and +1).
+                    example: -0.5106
+                  sentence:
+                    type: string
+                    description: Analyzed sentence
+                    example: "i am depressed"
+                  sentiment:
+                    type: string
+                    description: Category of the sentiment
+                    example: "negative"
+                  username:
+                    type: string
+                    description: Username making the request
+                    example: "Steven"
+                  version:
+                    type: string
+                    enum: [v2]
+                    example: "v2"
+  /welcome/{name}:
+    get:
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Welcome message
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Bonjour Emeric"
